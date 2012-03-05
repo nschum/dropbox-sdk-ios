@@ -60,13 +60,13 @@ static NSString *kDBDropboxUnknownUserId = @"unknown";
     _sharedSession = [session retain];
 }
 
-- (id)initWithAppKey:(NSString *)key appSecret:(NSString *)secret root:(NSString *)theRoot {
+- (id)initWithAppKey:(NSString *)key appSecret:(NSString *)appSecret root:(NSString *)theRoot {
     if ((self = [super init])) {
         
         baseCredentials = 
             [[NSDictionary alloc] initWithObjectsAndKeys:
                 key, kMPOAuthCredentialConsumerKey,
-                secret, kMPOAuthCredentialConsumerSecret, 
+                appSecret, kMPOAuthCredentialConsumerSecret,
                 kMPOAuthSignatureMethodPlaintext, kMPOAuthSignatureMethod, nil];
                 
         credentialStores = [NSMutableDictionary new];
