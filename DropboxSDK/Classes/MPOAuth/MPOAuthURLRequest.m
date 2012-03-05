@@ -32,7 +32,7 @@
 - (id)initWithURLRequest:(NSURLRequest *)inRequest {
 	if ((self = [super init])) {
 		self.url = [[inRequest URL] urlByRemovingQuery];
-		self.parameters = [[MPURLRequestParameter parametersFromString:[[inRequest URL] query]] mutableCopy];
+		_parameters = [[MPURLRequestParameter parametersFromString:[[inRequest URL] query]] mutableCopy];
 		self.HTTPMethod = [inRequest HTTPMethod];
 	}
 	return self;
