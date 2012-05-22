@@ -54,7 +54,7 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
 
         self.title = @"Dropbox";
         self.navigationItem.rightBarButtonItem =
-            [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(dismiss)];
+            [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self action:@selector(dismiss)] autorelease];
     }
     return self;
 }
@@ -88,7 +88,7 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
     [activityIndicator startAnimating];
     [self.view addSubview:activityIndicator];
 
-    self.webView = [[UIWebView alloc] initWithFrame:self.view.frame];
+    self.webView = [[[UIWebView alloc] initWithFrame:self.view.frame] autorelease];
     self.webView.delegate = self;
     self.webView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.webView.scalesPageToFit = YES;
@@ -166,16 +166,18 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
         NSString *okStr = NSLocalizedString(@"OK", nil);
 
         self.alertView =
-            [[UIAlertView alloc]
-             initWithTitle:title message:message delegate:nil cancelButtonTitle:okStr otherButtonTitles:nil];
+            [[[UIAlertView alloc]
+			  initWithTitle:title message:message delegate:nil cancelButtonTitle:okStr otherButtonTitles:nil]
+			 autorelease];
     } else {
         // if the page hasn't loaded, this alert gives the user a way to retry
         NSString *retryStr = NSLocalizedString(@"Retry", @"Retry loading a page that has failed to load");
 
         self.alertView =
-            [[UIAlertView alloc]
-             initWithTitle:title message:message delegate:self cancelButtonTitle:NSLocalizedString(@"Cancel", @"")
-             otherButtonTitles:retryStr, nil];
+            [[[UIAlertView alloc]
+              initWithTitle:title message:message delegate:self cancelButtonTitle:NSLocalizedString(@"Cancel", @"")
+              otherButtonTitles:retryStr, nil]
+			 autorelease];
     }
 
     [self.alertView show];
