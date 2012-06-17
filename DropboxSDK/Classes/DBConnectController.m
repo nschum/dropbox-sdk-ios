@@ -42,6 +42,7 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
     alertView.delegate = nil;
     [alertView release];
     alertView = pAlertView;
+    [pAlertView retain];
 }
 
 @synthesize hasLoaded;
