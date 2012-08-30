@@ -25,11 +25,21 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
 - (void)openUrl:(NSURL *)url;
 - (void)dismiss;
 - (void)dismissAnimated:(BOOL)animated;
+- (void)cancelAnimated:(BOOL)animated;
 
+@property (nonatomic, assign) UIViewController *rootController;
+@property (nonatomic, retain) DBSession *session;
 @property (nonatomic, retain) UIAlertView *alertView;
 @property (nonatomic, assign) BOOL hasLoaded;
 @property (nonatomic, retain) NSURL *url;
 @property (nonatomic, retain) UIWebView *webView;
+
+@end
+
+
+@interface NSURL (DBConnectController)
+
+- (NSArray *)dbPathComponents;
 
 @end
 
@@ -45,13 +55,21 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
     alertView = [pAlertView retain];
 }
 
+@synthesize rootController;
+@synthesize session;
 @synthesize hasLoaded;
 @synthesize url;
 @synthesize webView;
 
-- (id)initWithUrl:(NSURL *)connectUrl {
+- (id)initWithUrl:(NSURL *)connectUrl fromController:(UIViewController *)pRootController {
+    return [self initWithUrl:connectUrl fromController:pRootController session:[DBSession sharedSession]];
+}
+
+- (id)initWithUrl:(NSURL *)connectUrl fromController:(UIViewController *)pRootController session:(DBSession *)pSession {
     if ((self = [super init])) {
         self.url = connectUrl;
+        self.rootController = pRootController;
+        self.session = pSession;
 
         self.title = @"Dropbox";
         self.navigationItem.rightBarButtonItem =
@@ -63,6 +81,7 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
 }
 
 - (void)dealloc {
+	[session release];
     alertView.delegate = nil;
     [alertView release];
     [url release];
@@ -114,7 +133,7 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
     return UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad ||
-            interfaceOrientation == UIInterfaceOrientationPortrait;
+            [self.rootController shouldAutorotateToInterfaceOrientation:interfaceOrientation]; // Delegate to presenting view.
 }
 
 
@@ -189,7 +208,7 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
 
 - (BOOL)webView:(UIWebView *)aWebView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
 
-    NSString *appScheme = [[DBSession sharedSession] appScheme];
+    NSString *appScheme = [self.session appScheme];
     if ([[[request URL] scheme] isEqual:appScheme]) {
 
         [self openUrl:[request URL]];
@@ -203,8 +222,8 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
         [self cancelAnimated:NO];
 #endif
         return NO;
-    } else if (![[[request URL] pathComponents] isEqual:[self.url pathComponents]]) {
-        DBConnectController *childController = [[[DBConnectController alloc] initWithUrl:[request URL]] autorelease];
+    } else if (![[[request URL] dbPathComponents] isEqual:[self.url dbPathComponents]]) {
+        DBConnectController *childController = [[[DBConnectController alloc] initWithUrl:[request URL] fromController:self.rootController] autorelease];
 
         NSDictionary *queryParams = [DBSession parseURLParams:[[request URL] query]];
         NSString *title = [queryParams objectForKey:@"embed_title"];
@@ -242,7 +261,8 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
 #pragma mark private methods
 
 - (void)loadRequest {
-    NSURLRequest *urlRequest = [NSURLRequest requestWithURL:self.url cachePolicy:NSURLCacheStorageNotAllowed timeoutInterval:20];
+    NSURLRequest *urlRequest =
+		[[[NSURLRequest alloc] initWithURL:self.url cachePolicy:NSURLCacheStorageNotAllowed timeoutInterval:20] autorelease];
     [self.webView loadRequest:urlRequest];
 }
 
@@ -260,7 +280,7 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
 - (void)cancelAnimated:(BOOL)animated {
     [self dismissAnimated:animated];
 
-    NSString *cancelUrl = [NSString stringWithFormat:@"%@://%@/cancel", [[DBSession sharedSession] appScheme], kDBDropboxAPIVersion];
+    NSString *cancelUrl = [NSString stringWithFormat:@"%@://%@/cancel", [self.session appScheme], kDBDropboxAPIVersion];
     [self openUrl:[NSURL URLWithString:cancelUrl]];
 }
 
@@ -280,3 +300,13 @@ extern id<DBNetworkRequestDelegate> dbNetworkRequestDelegate;
 }
 
 @end
+
+
+@implementation NSURL (DBConnectController)
+
+- (NSArray *)dbPathComponents {
+	return [[self path] pathComponents];
+}
+
+@end
+
